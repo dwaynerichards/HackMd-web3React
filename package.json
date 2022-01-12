@@ -19,6 +19,7 @@
     "@uniswap/sdk-core": "^3.0.1",
     "@uniswap/v3-sdk": "^3.6.3",
     "eslint": "^8.6.0",
+    "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jsx-a11y": "^6.5.1",

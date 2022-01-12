@@ -19,97 +19,76 @@ const ethersProvider = new ethers.providers.JsonRpcProvider(
 );
 
 export default function BasicTable() {
+  const [isNetworkConnected, setNetworkConnection] = useState(false);
   const [rows, setRows] = useState([]);
-  const [poolContract, setPoolContract] = useState(null);
-
-  const [mintListener, setMintListener] = useState(false);
-  const [burnListener, setBurnListener] = useState(false);
-  const [time, setTime] = useState(Date.now());
-
+  //set variable for network conenction
+  //when network connection changes, update state of network connection
+  //when network connectionis updated, connect pool
+  //   const [mintListener, setMintListener] = useState(false);
+  //   const [burnListener, setBurnListener] = useState(false);
+  const poolContract = new ethers.Contract(poolAddress, ABI, ethersProvider);
+  const time = Date.now();
   const eventQueue = {
     storage: [],
     tx: 0,
   };
 
-  const deQueueSetState = (queue) => {
-    console.log("dequeueing", queue);
-    console.log("rows preSlice:", rows);
-    const newRows = rows.slice();
-
-    while (queue.storage.length > 0) {
-      const current = queue.storage.shift();
-      console.log("current", current);
-      newRows.push(current);
-    }
-    console.log("ROWS B4 STATE CHANGE:", rows);
-    console.log("NEWROWS  :", newRows);
-    //setRows(newRows);
-    Promise.resolve(setRows(newRows)).then(() =>
-      console.log("rows post mutate:", rows)
-    );
-  };
-
   const enqueue = (queue, eventObj) => {
     queue.storage.push(eventObj);
     queue.tx = queue.tx + 1;
-
-    console.log("enqueued");
+    //push new tx into queue
     console.log("currrent queue", queue.storage);
     console.log("current txs:", queue.tx);
-    if (queue.storage.length > 3) {
-      deQueueSetState(queue);
-    }
+    //slice aand attach oldrows to new queue
+    console.log("rows preSlice:", rows);
+    const newRows = rows.slice().concat(queue.storage);
+    console.log("ROWS B4 STATE CHANGE:", rows);
+    console.log("NEWROWS  :", newRows);
+    //reset old queue => set new rows
+    queue.storage = [];
+    setRows(newRows);
   };
+
+  // poolContract = new ethers.Contract(poolAddress, ABI, ethersProvider);
+  // When a Provider makes its initial connection, it emits a "network"
+  // event with a null oldNetwork along with the newNetwork. So, if the
+  // oldNetwork exists, it represents a changing network
   useEffect(() => {
     ethersProvider.on("network", (newNetwork, oldNetwork) => {
-      ethersProvider
-        .getNetwork()
-        .then((network) => console.log("connected to ", network));
-
-      // poolContract = new ethers.Contract(poolAddress, ABI, ethersProvider);
-      // When a Provider makes its initial connection, it emits a "network"
-      // event with a null oldNetwork along with the newNetwork. So, if the
-      // oldNetwork exists, it represents a changing network
-      setPoolContract(new ethers.Contract(poolAddress, ABI, ethersProvider));
-      //   poolContract.on("Mint", (sender, amount0, amount1, event) => {
-      //     console.log(mint);
-      //   });
-
-      //   poolContract.on("Burn", (sender, amount0, amount1, to, event) => {
-      //     console.log(Burn);
-      //   });
-
       if (oldNetwork) {
         window.location.reload();
       }
     });
+
+    ethersProvider.ready.then(() => {
+      ethersProvider
+        .getNetwork()
+        .then((network) => console.log("connected to ", network));
+
+      poolContract.on(
+        "Swap",
+        (sender, amount0In, amount1In, amount0Out, amount1Out, to, event) => {
+          const bigNumAmount0In = ethers.BigNumber.from(amount0In);
+          const bigNumAmount1In = ethers.BigNumber.from(amount1In);
+          const tokenAmountA = parseInt(bigNumAmount0In._hex, 16);
+          const tokenAmountB = parseInt(bigNumAmount1In._hex, 16);
+
+          const swapObj = {
+            action: "Swap",
+            totalValue: null,
+            tokenAmountA,
+            tokenAmountB,
+            account: to,
+            time: Date.now(),
+          };
+          console.log("Swap in contract from:", sender);
+          console.log("swapObj", swapObj);
+
+          enqueue(eventQueue, swapObj);
+        }
+      );
+    });
   }, []);
-  const [swapListener, setSwapListener] = useState(false);
-  useEffect(() => {
-    poolContract.on(
-      "Swap",
-      (sender, amount0In, amount1In, amount0Out, amount1Out, to, event) => {
-        if (!swapListener) setSwapListener(true);
-
-        const bigNumAmount0In = ethers.BigNumber.from(amount0In);
-        const bigNumAmount1In = ethers.BigNumber.from(amount1In);
-        const tokenAmountA = parseInt(bigNumAmount0In._hex, 16);
-        const tokenAmountB = parseInt(bigNumAmount1In._hex, 16);
-
-        const swapObj = {
-          action: "Swap",
-          totalValue: null,
-          tokenAmountA,
-          tokenAmountB,
-          account: to,
-          time: Date.now(),
-        };
-        console.log("Swap in contract from:", sender);
-        console.log("swapObj", swapObj);
-        enqueue(eventQueue, swapObj);
-      }
-    );
-  }, [poolContract]);
 
   return (
     <TableContainer component={Paper}>

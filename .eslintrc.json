@@ -1,6 +1,7 @@
 {
   "extends": [
     "eslint:recommended",
+    "airbnb",
     "plugin:import/errors",
     "plugin:react/recommended",
     "plugin:jsx-a11y/recommended",
@@ -20,7 +21,7 @@
     }
   },
   "env": {
-    "es6": true,
+    "es2021": true,
     "browser": true,
     "node": true
   },
