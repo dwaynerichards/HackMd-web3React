@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
 import { InjectedConnector } from "@web3-react/injected-connector";
-import { Web3Provider } from "@ethersproject/providers";
 const ABI = require("./USDC_ETH_Uniswap.json");
 const contractInterface = new ethers.utils.Interface(ABI);
 export const mintSignature = contractInterface.getEvent("Mint");
@@ -17,23 +16,22 @@ export const metaMaskInjected = new InjectedConnector({
 export const ethersProvider = new ethers.providers.JsonRpcProvider(
   process.env.ALCHEMY
 );
-export function getLibrary(provider) {
-  const library = new Web3Provider(provider);
-  library.pollingInterval = 12000;
-  return library;
-}
 
 export async function getSigner() {
-  const metaMask = new ethers.providers.Web3Provider(window.ethereum, "any");
-  await metaMask.send("eth_requestAccounts", []);
+  try {
+    const metaMask = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await metaMask.send("eth_requestAccounts", []);
 
-  const signer = metaMask.getSigner();
-  console.log("Accounts:", await signer.getAddress());
+    const signer = metaMask.getSigner();
+    console.log("Accounts:", await signer.getAddress());
 
-  metaMask.on("network", (newNetwork, oldNetwork) => {
-    if (oldNetwork) window.location.reload();
-  });
-  await metaMask.ready;
-  await metaMask.getNetwork().then((network) => console.log(network));
-  return signer;
+    metaMask.on("network", (newNetwork, oldNetwork) => {
+      if (oldNetwork) window.location.reload();
+    });
+    await metaMask.ready;
+    await metaMask.getNetwork().then((network) => console.log(network));
+    return signer;
+  } catch (err) {
+    console.log("error in getSigner:", err);
+  }
 }

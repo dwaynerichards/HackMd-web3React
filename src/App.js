@@ -1,62 +1,83 @@
 import { render } from "react-dom";
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { ThemeProvider } from "@emotion/react";
 import { Button } from "@mui/material";
+import Slide from "@mui/material/Slide";
 import theme from "../config/theme";
 import BasicTable from "./uniswapLpUSDC_ETH";
 import Fab from "@mui/material/Fab";
 import { useState } from "react";
-import { useWeb3React, Web3ReactProvider } from "@web3-react/core";
-
-import { getLibrary, getSigner } from "../config/Web3";
+import { getSigner } from "../config/Web3";
 
 export const active = {
   signer: null,
+  wallet: null,
 };
 const App = () => {
   const [activeSigner, setActiveSigner] = useState(null);
+  const [hasWallet, setHasWallet] = useState();
+  const [appearBttn, setAppearBttns] = useState(false);
 
   const handleConnect = async () => {
     try {
       active.signer = await getSigner();
-      setActiveSigner(active.signer);
+      if (active.signer) setActiveSigner(active.signer);
     } catch (err) {
       console.log("error in handleConnect:", err);
     }
   };
-  const disconnect = () => {
-    try {
-      console.log("Yea, good luck with that");
-    } catch (error) {
-      console.log(error);
-    }
+  const noWallet = () => {
+    setHasWallet(false);
   };
+
+  useEffect(() => {
+    setAppearBttns(true);
+  }, []);
 
   return (
     <div>
-      {active.signer ? (
-        <Web3ReactProvider getLibrary={getLibrary}>
+      {activeSigner || hasWallet === false ? (
+        <div>
           <ThemeProvider theme={theme}>
             <div>
               <BasicTable></BasicTable>
             </div>
           </ThemeProvider>
-        </Web3ReactProvider>
+        </div>
       ) : (
         <div>
-          <Web3ReactProvider getLibrary={getLibrary}>
-            <Fab
-              variant="extended"
-              size="medium"
-              color="secondary"
-              onClick={handleConnect}
-            >
-              Connect Wallet
-            </Fab>
-            <div>
-              <Button onClick={disconnect}>Disconnect</Button>
-            </div>
-          </Web3ReactProvider>
+          <div align="right">
+            <Slide
+              direction="right"
+              in={appearBttn}
+              timeout={2000}
+              mountOnEnter
+              unmountOnExit>
+              <Fab
+                variant="extended"
+                size="medium"
+                color="secondary"
+                onClick={handleConnect}>
+                Connect Wallet
+              </Fab>
+            </Slide>
+          </div>
+          <div align="left">
+            <Slide
+              direction="right"
+              in={appearBttn}
+              timeout={3000}
+              mountOnEnter
+              unmountOnExit>
+              <Fab
+                variant="extended"
+                size="medium"
+                color="primary"
+                onClick={noWallet}>
+                View Transactions
+              </Fab>
+            </Slide>
+          </div>
         </div>
       )}
     </div>
