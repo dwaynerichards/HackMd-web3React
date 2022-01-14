@@ -71,6 +71,7 @@ export default function BasicTable({ prevRows }) {
                     direction="right"
                     in={rows.length > 0}
                     mountOnEnter
+                    timeout={1000}
                     unmountOnExit>
                     <TableRow
                       key={row.time + row.account + Date.now() + 1}
