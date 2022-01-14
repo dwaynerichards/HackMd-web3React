@@ -23,8 +23,8 @@ export default function BasicTable({ prevRows }) {
 
   useEffect(async () => {
     const poolContract = active.signer
-      ? new ethers.Contract(pool.address, pool.ABI, ethersProvider)
-      : new ethers.Contract(pool.address, pool.ABI, await getSigner());
+      ? new ethers.Contract(pool.address, pool.ABI, active.signer)
+      : new ethers.Contract(pool.address, pool.ABI, ethersProvider);
 
     poolContract.on(
       "Swap",
@@ -73,7 +73,7 @@ export default function BasicTable({ prevRows }) {
                     mountOnEnter
                     unmountOnExit>
                     <TableRow
-                      key={row.time + row.account + Date.now()}
+                      key={row.time + row.account + Date.now() + 1}
                       sx={{
                         "&:last-child td, &:last-child th": { border: 0 },
                       }}>
