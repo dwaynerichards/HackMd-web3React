@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "parcel build src/index.html",
     "buildprod": "parcel build src/index.html --dist-dir ./build",
-    "deploy": "npm run build  && surge build"
+    "deploy": "npm run build  && surge dist"
   },
   "author": "darkWingDuckCurry",
   "license": "ISC",
